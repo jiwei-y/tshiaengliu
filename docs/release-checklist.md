@@ -3,15 +3,13 @@
 ## 倉庫內容
 
 - [ ] 根目錄包含 `SKILL.md` 與 `agents/openai.yaml`，可作為 agent skill 被正確識別。
-- [ ] `raw/` 目錄包含完整的古籍純文本 Markdown 語料。
-- [ ] `allusions/` 目錄包含 `chuxueji_allusion.csv` 與 `chuxueji_shidui.csv`。
-- [ ] `prebuilt/` 包含完整的預蒸餾風格產物（`_meta/corpus_index.json`、`語言DNA.md`、`篇章結構模板.md`、`排版格式指南.md`、`風格DNA.md`）。
-- [ ] `templates/` 包含完整的繁體中文蒸餾產物模板（`語言DNA.md`、`篇章結構模板.md`、`排版格式指南.md`、`風格DNA.md` 與 `_meta/example.schema.json`）。
+- [ ] `raw/` 目錄包含完整的 270 篇古籍純文本 Markdown 語料。
+- [ ] `allusions/chuxueji_shidui.csv` 結構完整，可正常檢索。
+- [ ] `prebuilt/` 包含單一總指南 `風格DNA.md` 與離線索引 `_meta/corpus_index.json`。
 - [ ] `LICENSE` 為完整 GNU AGPL v3.0 原文，且 `README.md` 明確標示 `AGPL-3.0-or-later`。
 
-## 內容一致性
+## 內容一致性與自檢
 
-- [ ] 全倉庫核心文檔與模板統一使用繁體中文。
-- [ ] 蒸餾層次統一為 L1（表層語言）、L2（篇章結構）、L3（純文本 Markdown 排版格式）。
-- [ ] 明確說明本項目直接用於 LLM 對話語言，且產物語言默認與對話語言一致。
-- [ ] 明確規範輸出四六文時必須檢索並使用 `allusions/` 中的典故與事對。
+- [ ] 執行 `python3 scripts/check_skill.py` 全數通過（路徑、索引、典故表、原例比對與範例句律指標）。
+- [ ] `SKILL.md`、`prebuilt/風格DNA.md`、`README.md` 與 `agents/openai.yaml` 的載入路徑與目錄結構一致。
+- [ ] 明確說明對話與預設產物語體一致，且輸出四六文時須檢索 `allusions/chuxueji_shidui.csv`。
