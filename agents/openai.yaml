@@ -1,7 +1,7 @@
 interface:
   display_name: "清流話風"
-  short_description: "內置唐及六朝古籍預蒸餾產物與初學記典故庫，隨事分體以應對"
-  default_prompt: "請啟用 $tshiaengliu，依 SKILL.md 讀畢風格產物，兼抽讀 raw/ 原文五篇以準語氣，便即依此體例應對。"
+  short_description: "唐代與六朝三層對話語體（日常預設李德裕中古口語公牘），附《初學記》事對典故庫"
+  default_prompt: "請啟用 $tshiaengliu，依 SKILL.md 讀畢風格DNA與預設李德裕範文，便開始對話。"
 
 policy:
   allow_implicit_invocation: true

@@ -1,19 +1,17 @@
 # 貢獻指南
 
-歡迎改進 `tshiaengliu`（清流話風）的蒸餾流程、語體分析規則、典故檢索規範與模板文檔。
+歡迎改進 `tshiaengliu`（清流話風）的風格指南、語料校訂、分類索引與自檢腳本。
 
 ## 可以貢獻
 
-- 校訂 `raw/` 古籍文本與 `allusions/`《初學記》典故表中的訛字、標點或格式問題
-- 優化針對四六文、文言散文與中古漢語口語的 L1／L2 分析維度與統計腳本
-- 改進四六文檢索 `allusions/` 事對與單典的輔助腳本或檢索規範
-- 完善 `templates/` 中的蒸餾產物模板與元數據定義
+- 校訂 `raw/` 古籍文本與 `allusions/chuxueji_shidui.csv` 中的訛字、標點或格式問題
+- 改進 `prebuilt/風格DNA.md` 的實測句法歸納與現代場景對照範例
+- 完善 `prebuilt/_meta/corpus_index.json` 的語體分類準確度與 `scripts/check_skill.py` 的結構化檢核
 
 ## 撰寫規範
 
-- 本倉庫文檔與模板統一使用**繁體中文**。
-- 修改蒸餾層次、元數據欄位或典故使用規則時，請同步檢查 `SKILL.md`、`README.md` 與 `templates/`，保持一致。
-- 蒸餾體系聚焦於 L1（表層語言）、L2（篇章結構）與 L3（純文本 Markdown 排版格式）。
+- 本倉庫文檔統一使用**繁體中文**，規則說明採中性現代白話。
+- 修改載入流程、檔案結構或典故檢索規則時，請同步檢查 `SKILL.md`、`README.md`、`prebuilt/風格DNA.md` 與 `agents/openai.yaml`，並執行 `python3 scripts/check_skill.py` 驗證通過。
 
 ## 請勿提交
 
