@@ -1,14 +1,13 @@
-# 蒸餾產物模板
+# 蒸餾產物體式（templates）
 
-本目錄提供對本倉庫 `raw/` 執行統一蒸餾時使用的文件與元數據模板。執行蒸餾時，請將以下結構生成至倉庫根目錄下的 `distilled/`：
+本目錄所列，乃對 `raw/` 重行蒸餾時所依之文書體式。施行蒸餾時，並依下式輸出至倉庫根目錄 `distilled/`：
 
 ```text
 distilled/
-├── _meta/                    # 元數據標注（結構見 _meta/example.schema.json）
-├── 語言DNA.md                # L1 表層語言分析產物（含三大語體與用典特徵）
-├── 篇章結構模板.md            # L2 篇章與對話結構模板（按用途與場合分層）
-├── 排版格式指南.md            # L3 純文本 Markdown 排版格式指南
-└── 風格DNA.md                # 總入口整合文檔（含 allusions/ 四六用典規範）
+├── _meta/
+│   └── corpus_index.json     # 全量元數據索引（體式見 _meta/example.schema.json）
+├── 語言DNA.md                # L1 表層語言產物
+├── 篇章結構模板.md            # L2 篇章與應對結構產物
+├── 排版格式指南.md            # L3 純文本 Markdown 排版產物
+└── 風格DNA.md                # 總綱會通文檔
 ```
-
-所有產物均採用繁體中文，與 `raw/` 語料及 `allusions/` 典故庫保持一致。
