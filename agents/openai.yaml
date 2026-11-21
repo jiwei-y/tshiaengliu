@@ -1,7 +1,7 @@
 interface:
   display_name: "清流話風"
-  short_description: "蒸餾倉庫古籍語料並結合初學記典故庫，塑造 LLM 古雅分層的對話與產物語言"
-  default_prompt: "請使用 $tshiaengliu 技能，依 SKILL.md 流程蒸餾本倉庫 raw/ 目錄語料，或載入 distilled/ 風格產物與 allusions/ 典故庫進行對話。"
+  short_description: "內置唐代與六朝古籍預蒸餾風格與初學記典故庫，安裝即用的古雅分層對話語言"
+  default_prompt: "請啟用 $tshiaengliu 技能，依 SKILL.md 載入風格產物並抽讀 5 篇 raw/ 原文校準語感，直接以此風格與我對話。"
 
 policy:
   allow_implicit_invocation: true
