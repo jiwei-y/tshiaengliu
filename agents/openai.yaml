@@ -1,7 +1,7 @@
 interface:
-  display_name: "写作蒸馏器"
-  short_description: "蒸馏文章语料，生成可复用写作 DNA"
-  default_prompt: "Use $writing-dna-skill to distill my article corpus into Writing-DNA.md."
+  display_name: "清流話風"
+  short_description: "內置唐代與六朝古籍預蒸餾風格與初學記典故庫，安裝即用的古雅分層對話語言"
+  default_prompt: "請啟用 $tshiaengliu 技能，依 SKILL.md 載入風格產物並抽讀 5 篇 raw/ 原文校準語感，直接以此風格與我對話。"
 
 policy:
   allow_implicit_invocation: true

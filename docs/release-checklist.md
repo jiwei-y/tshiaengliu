@@ -1,27 +1,17 @@
-# 发布前检查清单
+# 發布前檢查清單
 
-## 仓库内容
+## 倉庫內容
 
-- [ ] 根目录包含 `SKILL.md`，可作为 Codex skill 被识别。
-- [ ] `templates/author-corpus/zh/` 和 `templates/author-corpus/en/` 都包含完整模板。
-- [ ] `SKILL.md` 和 `references/workflow.en.md` 的流程与质量标准保持一致。
-- [ ] `README.md` 说明语料要求：至少 20 篇完整文章。
-- [ ] 示例目录只演示格式，不暗示少量文章即可复刻风格。
-- [ ] 仓库不包含未经授权的原文语料、截图或私密内容。
-- [ ] `LICENSE` 和 `NOTICE` 已确认适合按非商业协议公开发布，中英文 README 的授权说明一致。
-- [ ] `docs/usage-boundaries.md` 已说明不要冒充作者或误导读者。
+- [ ] 根目錄包含 `SKILL.md` 與 `agents/openai.yaml`，可作為 agent skill 被正確識別。
+- [ ] `raw/` 目錄包含完整的古籍純文本 Markdown 語料。
+- [ ] `allusions/` 目錄包含 `chuxueji_allusion.csv` 與 `chuxueji_shidui.csv`。
+- [ ] `prebuilt/` 包含完整的預蒸餾風格產物（`_meta/corpus_index.json`、`語言DNA.md`、`篇章結構模板.md`、`排版格式指南.md`、`風格DNA.md`）。
+- [ ] `templates/` 包含完整的繁體中文蒸餾產物模板（`語言DNA.md`、`篇章結構模板.md`、`排版格式指南.md`、`風格DNA.md` 與 `_meta/example.schema.json`）。
+- [ ] `LICENSE` 為完整 GNU AGPL v3.0 原文，且 `README.md` 明確標示 `AGPL-3.0-or-later`。
 
-## 内容一致性
+## 內容一致性
 
-- [ ] 全文统一为“蒸馏的六个层次”。
-- [ ] 不再使用行业限定性描述。
-- [ ] 中文名统一为“写作蒸馏器.skill”。
-- [ ] 英文名统一为 `writing-dna-skill`。
-- [ ] 英文文档只引用英文产物文件名，中文文档只引用中文产物文件名。
-
-## 发布建议
-
-- [ ] GitHub description 可写：`Distill reusable Writing DNA from article corpora for agent-assisted style analysis and writing.`
-- [ ] GitHub topics 可用：`writing`, `ai-agent`, `style-analysis`, `skill`, `writing-dna`。
-- [ ] 小红书发布时强调：真实效果建议准备至少 20 篇完整文章。
-- [ ] 小红书发布时不要放未经授权的原文截图或全文语料。
+- [ ] 全倉庫核心文檔與模板統一使用繁體中文。
+- [ ] 蒸餾層次統一為 L1（表層語言）、L2（篇章結構）、L3（純文本 Markdown 排版格式）。
+- [ ] 明確說明本項目直接用於 LLM 對話語言，且產物語言默認與對話語言一致。
+- [ ] 明確規範輸出四六文時必須檢索並使用 `allusions/` 中的典故與事對。
