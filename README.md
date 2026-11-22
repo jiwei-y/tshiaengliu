@@ -7,7 +7,7 @@
 - **按需載入、低上下文開銷**：日常對話預設讀入 `prebuilt/風格DNA.md` 與 5 篇精選李德裕密狀（約 13 KB），切換至駢散長論或四六駢文時才延遲載入對應範文與典故分片。
 - **對話與產物語言一致**：除非用戶額外指定其他語言或格式，生成的報告、總結與說明皆沿用當前語體。
 - **四六文必核典故**：依 `allusions/INDEX.md` 按主題取分片 CSV 或執行 `scripts/check_skill.py --allusion` 核對出處原文，全篇以純粹漢語成文。
-- **只取文字，不取思維**：實務與論辨語體中，程式碼、命令、路徑、錯誤碼與計量單位原樣保留；四六駢文則以典雅漢語傳達真實事功。
+- **只取文字，不取思維**：實務與論辨語體中，程式碼、命令、路徑、錯誤碼與技術事實原樣保留；四六駢文則以典雅漢語傳達真實事功。
 
 ## 快速上手
 
@@ -55,7 +55,7 @@ python3 scripts/check_skill.py --style sample.txt # 檢測任意輸出樣本的�
 
 ## 內置典故庫（`allusions/`）
 
-- `allusions/INDEX.md` 與 34 個主題分片 CSV（`allusions/01_天象日月.csv` 至 `allusions/34_鳥部鱗介.csv`）：收錄《初學記》3,564 組對偶事對（`allusion,source_text1,source_text2`），每片皆小於 40 KB，便於按主題直接讀取或由 `scripts/check_skill.py --allusion` 跨片檢索。
+- `allusions/INDEX.md` 與 34 個主題分片 CSV（`allusions/01_天象日月.csv` 至 `allusions/34_鳥部鱗介.csv`）：收錄《初學記》3,564 組對偶事對（`allusion,source_text1,source_text2`），便於按主題直接讀取或由 `scripts/check_skill.py --allusion` 跨片檢索。
 
 ## 目錄結構
 
