@@ -1,13 +1,13 @@
 # 清流話風（tshiaengliu）
 
-將本倉庫 `raw/` 目錄中的唐代與六朝名篇（中古口語公牘、駢散兼行、四六駢文）凝練為可執行的風格指南，並結合 `allusions/chuxueji_shidui.csv`《初學記》事對典故庫，賦予 LLM agent 與 chatbot 分層得體的**對話語言**與**默認產物語言**。
+將本倉庫 `raw/` 目錄中的唐代與六朝名篇（中古口語公牘、駢散兼行、四六駢文）凝練為可執行的風格指南，並結合 `allusions/`《初學記》分門事對典故庫，賦予 LLM agent 與 chatbot 分層得體的**對話語言**與**默認產物語言**。
 
 ## 核心特點
 
-- **按需載入、低上下文開銷**：日常對話預設讀入 `prebuilt/風格DNA.md` 與 5 篇精選李德裕密狀（約 13 KB），切換至駢散長論或四六駢文時才延遲載入對應範文與典故。
+- **按需載入、低上下文開銷**：日常對話預設讀入 `prebuilt/風格DNA.md` 與 5 篇精選李德裕密狀（約 13 KB），切換至駢散長論或四六駢文時才延遲載入對應範文與典故分片。
 - **對話與產物語言一致**：除非用戶額外指定其他語言或格式，生成的報告、總結與說明皆沿用當前語體。
-- **四六文必核典故**：透過 `scripts/check_skill.py --allusion` 檢索 `allusions/chuxueji_shidui.csv` 核對出處原文。
-- **只取文字，不取思維**：程式碼、命令、路徑、錯誤碼與技術事實原樣保留。
+- **四六文必核典故**：依 `allusions/INDEX.md` 按主題取分片 CSV 或執行 `scripts/check_skill.py --allusion` 核對出處原文，全篇以純粹漢語成文。
+- **只取文字，不取思維**：實務與論辨語體中，程式碼、命令、路徑、錯誤碼與計量單位原樣保留；四六駢文則以典雅漢語傳達真實事功。
 
 ## 快速上手
 
@@ -55,7 +55,7 @@ python3 scripts/check_skill.py --style sample.txt # 檢測任意輸出樣本的�
 
 ## 內置典故庫（`allusions/`）
 
-- `allusions/chuxueji_shidui.csv`：整理自《初學記》的 3,564 組對偶事對（`allusion, source_text1, source_text2`），同時支援成對駢句與單典出處核驗。
+- `allusions/INDEX.md` 與 34 個主題分片 CSV（`allusions/01_天象日月.csv` 至 `allusions/34_鳥部鱗介.csv`）：收錄《初學記》3,564 組對偶事對（`allusion,source_text1,source_text2`），每片皆小於 40 KB，便於按主題直接讀取或由 `scripts/check_skill.py --allusion` 跨片檢索。
 
 ## 目錄結構
 
@@ -69,7 +69,7 @@ tshiaengliu/
 ├── agents/
 │   └── openai.yaml                   # Agent 介面設定
 ├── prebuilt/
-│   ├── 風格DNA.md                    # 內置單一風格總指南（含三體句法核與現代技術範例）
+│   ├── 風格DNA.md                    # 內置單一風格總指南（含三體句法核與現代工程範例）
 │   └── _meta/
 │       └── corpus_index.json         # 全庫 270 篇離線分類索引（供重蒸餾使用）
 ├── raw/                              # 270 篇唐與六朝純文本語料
@@ -79,9 +79,10 @@ tshiaengliu/
 │   ├── 李德裕/
 │   └── 陸贄/
 ├── allusions/
-│   └── chuxueji_shidui.csv           # 《初學記》3,564 組事對與出處原文
+│   ├── INDEX.md                      # 《初學記》34 門主題分片目錄
+│   └── 01_天象日月.csv … 34_鳥部鱗介.csv
 ├── scripts/
-│   └── check_skill.py                # 倉庫完整性與句律節奏自檢腳本
+│   └── check_skill.py                # 倉庫完整性、典故檢索與句律節奏自檢腳本
 └── docs/
     ├── release-checklist.md
     └── usage-boundaries.md

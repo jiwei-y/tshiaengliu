@@ -146,13 +146,25 @@ def check_repo(target_dir: str) -> None:
     for d in index:
         assert d["register"] in VALID_REGISTERS, f"bad register: {d}"
 
-    # 4. allusions/chuxueji_shidui.csv parses cleanly with 3 columns.
-    with (ROOT / "allusions/chuxueji_shidui.csv").open(encoding="utf-8-sig", newline="") as f:
-        rows = list(csv.reader(f))
-    assert rows[0] == ["allusion", "source_text1", "source_text2"], f"bad CSV header: {rows[0]}"
-    assert len(rows) - 1 == 3564 and all(len(r) == 3 for r in rows[1:]), "malformed shidui CSV row"
+    # 3. allusions/INDEX.md and thematic CSV shards parse cleanly and stay under 42 KB each.
+    allusion_index = ROOT / "allusions/INDEX.md"
+    assert allusion_index.is_file(), "missing allusions/INDEX.md"
+    shards = sorted((ROOT / "allusions").glob("*.csv"))
+    assert shards, "no allusion CSV shards found"
+    indexed_shards = set(re.findall(r"`(allusions/[^`]+\.csv)`", allusion_index.read_text(encoding="utf-8")))
+    disk_shards = {f"allusions/{p.name}" for p in shards}
+    assert indexed_shards == disk_shards, f"allusions/INDEX.md mismatch: {indexed_shards ^ disk_shards}"
+    pair_count = 0
+    for p in shards:
+        assert p.stat().st_size <= 42000, f"allusion shard too large ({p.stat().st_size}B): {p.name}"
+        with p.open(encoding="utf-8", newline="") as f:
+            rows = list(csv.reader(f))
+        assert rows[0] == ["allusion", "source_text1", "source_text2"], f"bad header in {p.name}: {rows[0]}"
+        assert all(len(r) == 3 for r in rows[1:]), f"malformed row in {p.name}"
+        pair_count += len(rows) - 1
+    assert pair_count == 3564, f"expected 3564 allusion pairs, got {pair_count}"
 
-    # 5. All verbatim corpus quotes in tables exist in raw/ (skip schematic placeholders containing …).
+    # 4. All verbatim corpus quotes in tables exist in raw/ (skip schematic placeholders containing …).
     guide_text = guide_path.read_text(encoding="utf-8")
     raw_blob = "\n".join(p.read_text(encoding="utf-8") for p in raw_files)
     table_quotes = [
@@ -165,7 +177,7 @@ def check_repo(target_dir: str) -> None:
     for q in table_quotes:
         assert q in raw_blob, f"table quote not found verbatim in raw/: 「{q}」"
 
-    # 6. Embedded golden examples satisfy dynamically measured baseline rhythm of 中古口語公牘.
+    # 5. Embedded golden examples satisfy dynamically measured baseline rhythm of 中古口語公牘.
     max_avg, max_semi, max_9p = ldy_limits(index_path)
     examples = re.findall(r"```example-ldy\n(.*?)\n```", guide_text, flags=re.S)
     assert len(examples) >= 3, "expected at least 3 example-ldy blocks"
@@ -177,7 +189,7 @@ def check_repo(target_dir: str) -> None:
         assert m["colon_headers"] == 0, f"example {i} uses colon-header list"
 
     print(
-        f"OK ({target_dir}): {len(raw_keys)} raw docs, {len(rows) - 1} shidui pairs, "
+        f"OK ({target_dir}): {len(raw_keys)} raw docs, {len(shards)} allusion shards ({pair_count} pairs), "
         f"{len(table_quotes)} verbatim quotes, {len(examples)} golden examples "
         f"(limits: avg<={max_avg}, >=9<={max_9p}%, semi/1k<={max_semi})."
     )
@@ -214,16 +226,17 @@ def check_style(target: str) -> None:
 
 
 def search_allusion(keyword: str, limit: int = 10) -> None:
-    with (ROOT / "allusions/chuxueji_shidui.csv").open(encoding="utf-8-sig", newline="") as f:
-        hits = []
-        for r in csv.DictReader(f):
-            s1, s2 = r["source_text1"].strip(), r["source_text2"].strip()
-            if not s1 or not s2 or "見上" in s1 or "見上" in s2:
-                continue
-            if keyword in r["allusion"] or keyword in s1 or keyword in s2:
-                hits.append((r["allusion"], s1, s2))
-    for name, s1, s2 in hits[:limit]:
-        print(f"{name}\n  1: {s1}\n  2: {s2}")
+    hits = []
+    for p in sorted((ROOT / "allusions").glob("*.csv")):
+        with p.open(encoding="utf-8", newline="") as f:
+            for r in csv.DictReader(f):
+                s1, s2 = r["source_text1"].strip(), r["source_text2"].strip()
+                if not s1 or not s2 or "見上" in s1 or "見上" in s2:
+                    continue
+                if keyword in r["allusion"] or keyword in s1 or keyword in s2:
+                    hits.append((p.name, r["allusion"], s1, s2))
+    for fname, name, s1, s2 in hits[:limit]:
+        print(f"[{fname}] {name}\n  1: {s1}\n  2: {s2}")
     print(f"({min(len(hits), limit)}/{len(hits)} clean matches for '{keyword}')")
 
 
