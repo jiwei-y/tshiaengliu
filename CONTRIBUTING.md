@@ -4,7 +4,7 @@
 
 ## 可以貢獻
 
-- 校訂 `raw/` 古籍文本與 `allusions/chuxueji_shidui.csv` 中的訛字、標點或格式問題
+- 校訂 `raw/` 古籍文本與 `allusions/` 典故分片表中的訛字、標點或格式問題
 - 改進 `prebuilt/風格DNA.md` 的實測句法歸納與現代場景對照範例
 - 完善 `prebuilt/_meta/corpus_index.json` 的語體分類準確度與 `scripts/check_skill.py` 的結構化檢核
 
