@@ -11,6 +11,16 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 VALID_REGISTERS = ("中古口語公牘", "駢散兼行", "四六駢文")
 FUNC_CHARS = tuple("之於以而則便即須緣望得却都合要恐只並也矣焉乎哉耳")
+REGISTER_CONTRAST = (
+    ("條件承接", ("苟", "儻", "則", "輒"), ("如", "若", "便", "即")),
+    ("原因說明", ("因", "良以"), ("緣", "只緣", "所以")),
+    ("請求處置", ("伏乞", "乞"), ("望", "伏望", "仍望")),
+    ("動補處置", ("持", "反"), ("將", "却", "即得", "亦得", "即免")),
+    ("限定判斷", ("唯", "惟", "非"), ("只", "只是", "不是")),
+    ("助動禁止", ("欲", "當", "不宜", "勿", "莫"), ("須", "要", "合", "不合", "不得", "不要")),
+    ("全稱追加", ("凡", "咸", "悉", "他", "餘", "復"), ("皆", "並", "都", "别", "更", "仍", "兼")),
+    ("預判言說", ("懼", "曰", "言", "遽"), ("恐", "必恐", "云", "説", "速", "早", "商量")),
+)
 COURT_RE = re.compile(r"屏營|兢皇|兢越|頓首|懇切之至|感切之至|懇願之至|伏聽敕|伏候敕|伏侯敕|俯伏待罪|不勝懇|不任懇|丹懇|謹奉表")
 KO_RE = re.compile(r"只緣|只是|只可|只合|却|都不|都無|都未|都似|商量|未審|穩便|處分|便須|即須|便令|即令|伏望|仍望|望付|望令|並是|並無|並不|更無|不要|切要|未要|似可")
 ARG_RE = re.compile(r"是以|然則|何則|豈不|乎[？。]|也[，。]|矣[，。]|焉[，。]|哉[？！。]")
@@ -78,10 +88,12 @@ def print_stats(target_dir: str) -> None:
         print(f"WARN: {w}")
 
     ordered = [g for g in VALID_REGISTERS if g in groups] + [g for g in groups if g not in VALID_REGISTERS]
+    reg_blobs: dict[str, tuple[str, int]] = {}
     for reg in ordered:
         docs = groups[reg]
         joined = "\n".join(t for _, t in docs)
         m = rhythm_metrics(joined)
+        reg_blobs[reg] = (joined, m["han"])
         print(
             f"\n=== {reg} ({len(docs)} 篇, {m['han']} 漢字) ===\n"
             f"句律: 均分句 {m['avg_clause']:.1f} 字 | P90 {m['p90_clause']} 字 | "
@@ -123,6 +135,17 @@ def print_stats(target_dir: str) -> None:
         if outliers:
             print("疑似跨體邊界篇(須複核):", "; ".join(outliers[:8]))
 
+    if len(ordered) >= 2:
+        hdr = " / ".join(ordered)
+        print(f"\n=== 跨體語體傾向對照（/千字，序：{hdr}） ===")
+        for label, lit_terms, col_terms in REGISTER_CONTRAST:
+            fmt = lambda terms: " ".join(
+                f"{w}({'/'.join(f'{reg_blobs[r][0].count(w) * 1000 / reg_blobs[r][1]:.1f}' for r in ordered)})"
+                for w in terms
+                if any(w in reg_blobs[r][0] for r in ordered)
+            )
+            print(f"{label}: 文言[{fmt(lit_terms)}] ↔ 口語[{fmt(col_terms)}]")
+
 
 def check_repo(target_dir: str) -> None:
     guide_path = ROOT / target_dir / "風格DNA.md"
@@ -136,7 +159,7 @@ def check_repo(target_dir: str) -> None:
         for rel in path_re.findall(doc.read_text(encoding="utf-8")):
             assert (ROOT / rel).is_file(), f"missing path {rel} referenced in {doc.relative_to(ROOT)}"
 
-    # 3. corpus_index.json matches raw/**/*.md 1:1 with valid registers.
+    # 2. corpus_index.json matches raw/**/*.md 1:1 with valid registers.
     raw_files = sorted((ROOT / "raw").rglob("*.md"))
     raw_keys = {(p.parent.name, p.stem) for p in raw_files}
     index = json.loads(index_path.read_text(encoding="utf-8"))
