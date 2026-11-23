@@ -1,0 +1,53 @@
+name: Release Web Skill Package
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'SKILL.md'
+      - 'prebuilt/**'
+      - 'raw/**'
+      - 'allusions/**'
+      - 'scripts/check_skill.py'
+      - '.github/workflows/release-web-skill.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-web-skill
+  cancel-in-progress: false
+
+jobs:
+  release-web-skill:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Validate and publish Gemini Web App skill zip
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python3 scripts/check_skill.py
+
+          DATE="$(date -u +%Y%m%d)"
+          LAST_SEQ="$(git tag -l "v${DATE}-*" | awk -F- 'NF==2 && $2 ~ /^[0-9]+$/ {n = $2 + 0; if (n > m) m = n} END {print m + 0}')"
+          TAG="v${DATE}-$((LAST_SEQ + 1))"
+          ASSET="dist/tshiaengliu-web-${TAG}.zip"
+
+          python3 scripts/check_skill.py --pack-web "${ASSET}"
+
+          gh release create "${TAG}" "${ASSET}" \
+            --target "${GITHUB_SHA}" \
+            --title "tshiaengliu Web Skill ${TAG}" \
+            --generate-notes
