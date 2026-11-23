@@ -5,6 +5,7 @@ import csv
 import json
 import re
 import sys
+import zipfile
 from collections import Counter
 from pathlib import Path
 
@@ -149,13 +150,19 @@ def print_stats(target_dir: str) -> None:
 
 def check_repo(target_dir: str) -> None:
     guide_path = ROOT / target_dir / "風格DNA.md"
+    ext_path = ROOT / target_dir / "擴充語體.md"
     index_path = ROOT / target_dir / "_meta/corpus_index.json"
     assert guide_path.is_file(), f"missing {guide_path.relative_to(ROOT)}"
     assert index_path.is_file(), f"missing {index_path.relative_to(ROOT)}"
+    if target_dir == "prebuilt":
+        assert ext_path.is_file(), f"missing {ext_path.relative_to(ROOT)}"
 
     # 1. Local file paths cited in active docs exist on disk.
     path_re = re.compile(r"`((?:raw|prebuilt|allusions|scripts)/[^`]+?\.(?:md|json|csv|py))`")
-    for doc in (ROOT / "SKILL.md", ROOT / "README.md", guide_path, *sorted((ROOT / "docs").glob("*.md"))):
+    docs_to_check = [ROOT / "SKILL.md", ROOT / "README.md", guide_path, *sorted((ROOT / "docs").glob("*.md"))]
+    if ext_path.is_file():
+        docs_to_check.append(ext_path)
+    for doc in docs_to_check:
         for rel in path_re.findall(doc.read_text(encoding="utf-8")):
             assert (ROOT / rel).is_file(), f"missing path {rel} referenced in {doc.relative_to(ROOT)}"
 
@@ -189,10 +196,11 @@ def check_repo(target_dir: str) -> None:
 
     # 4. All verbatim corpus quotes in tables exist in raw/ (skip schematic placeholders containing …).
     guide_text = guide_path.read_text(encoding="utf-8")
+    quote_sources = guide_text + ("\n" + ext_path.read_text(encoding="utf-8") if ext_path.is_file() else "")
     raw_blob = "\n".join(p.read_text(encoding="utf-8") for p in raw_files)
     table_quotes = [
         q
-        for line in guide_text.splitlines()
+        for line in quote_sources.splitlines()
         if line.startswith("|") and "「" in line
         for q in re.findall(r"「([^」]+)」", line)
         if "…" not in q
@@ -263,6 +271,110 @@ def search_allusion(keyword: str, limit: int = 10) -> None:
     print(f"({min(len(hits), limit)}/{len(hits)} clean matches for '{keyword}')")
 
 
+def pack_web(out_zip: str) -> None:
+    skill_text = (ROOT / "SKILL.md").read_text(encoding="utf-8")
+    core_guide = ROOT / "prebuilt/風格DNA.md"
+    ext_guide = ROOT / "prebuilt/擴充語體.md"
+    ext_text = ext_guide.read_text(encoding="utf-8")
+
+    # Parse exemplar lists directly from single-source docs (3 core in SKILL.md + 2 extension in 擴充語體.md).
+    sec1 = skill_text.split("## 一、", 1)[1].split("## 二、", 1)[0]
+    core_blocks = re.split(r"(?m)^\d+\.\s+", sec1)[1:4]
+    assert len(core_blocks) == 3, "could not parse 3 core register blocks from SKILL.md"
+    ext_blocks = [ext_text.split("## 二、", 1)[1].split("## 三、", 1)[0], ext_text.split("## 三、", 1)[1]]
+
+    raw_re = re.compile(r"`(raw/[^`]+\.md)`")
+    groups = [raw_re.findall(b) for b in (*core_blocks, *ext_blocks)]
+    assert all(groups), f"missing exemplars in one of the 5 registers: {[len(g) for g in groups]}"
+    exemplars = list(dict.fromkeys(p for g in groups for p in g))
+
+    fmt_list = lambda paths: "\n".join(f"     - `{p}`" for p in paths)
+    name = "tshiaengliu"
+    desc = (
+        "賦予對話與寫作唐代及六朝五層語體（預設李德裕中古口語公牘，深度論辨用陸贄駢散兼行，"
+        "禮辭賀謝用四六駢文，正裝論事陳情用崔致遠與李商隱四六，哲理世情長論用六朝駢論，"
+        "並附《初學記》典故庫）。除非用戶另有指定，對話與產物語言一致。"
+    )
+    assert len(name) <= 64 and len(desc) <= 1024
+    web_skill = (
+        f"---\nname: {name}\ndescription: {desc}\n---\n\n"
+        "# 清流話風（tshiaengliu 五體全本）\n\n"
+        "## 一、啟用與按需載入\n\n"
+        "啟用後，對話與所生成的報告、文章、說明預設皆採本風格（除非用戶另有指定）。按當前場合載入對應指南與實操範文：\n\n"
+        f"1. **日常啟用（預設：中古口語公牘，李德裕密狀 {len(groups[0])} 篇）**：\n"
+        "   - 讀取 `prebuilt/風格DNA.md` 與 `prebuilt/擴充語體.md`（掌握五體路由與各檔分際）。\n"
+        "   - 讀取以下李德裕密狀校準短句節奏、文白比例與條疏體例：\n"
+        f"{fmt_list(groups[0])}\n"
+        f"2. **切換為駢散兼行（邏輯論辨、架構與方案利弊權衡，陸贄 {len(groups[1])} 篇）**：\n"
+        "   - 補讀以下陸贄原文：\n"
+        f"{fmt_list(groups[1])}\n"
+        f"3. **切換為四六駢文·禮辭（賀慶致謝、辭讓致辭、隆重總結，{len(groups[2])} 篇）**：\n"
+        "   - 補讀以下四六禮辭原文：\n"
+        f"{fmt_list(groups[2])}\n"
+        "   - 查核典故：先讀 `allusions/INDEX.md`，再按主題讀對應分片 CSV 核對出處原文，以純粹典雅漢語化入四六句格。\n"
+        f"4. **切換為四六駢文·論事陳情（以正裝四六陳述實務形勢、利害得失、婉諫或陳情，{len(groups[3])} 篇）**：\n"
+        "   - 依 `prebuilt/擴充語體.md` 第二節補讀以下原文：\n"
+        f"{fmt_list(groups[3])}\n"
+        "   - 查核典故：同依 `allusions/INDEX.md` 按主題取分片 CSV 核對原文，以純粹典雅漢語成文。\n"
+        f"5. **切換為六朝駢論（哲理思辨、世情批評、制度文化宏觀長論，{len(groups[4])} 篇）**：\n"
+        "   - 依 `prebuilt/擴充語體.md` 第三節補讀以下原文：\n"
+        f"{fmt_list(groups[4])}\n"
+        "   - 全無公文表套，善用設客問答、分類條舉與高密虛詞排比；用典可依 `allusions/INDEX.md` 查核原文。\n\n"
+        "## 二、底線與長對話節奏\n\n"
+        "- 實務與論辨回覆（中古口語公牘、駢散兼行）中，程式碼、命令、檔案路徑、錯誤碼與數據原樣保留。\n"
+        "- 禮辭、四六論事與六朝駢論以純粹典雅漢語成文，以實事化入句格。\n"
+        "- 長對話撰寫較長（約 150 字以上）日常公牘前，留意短句節奏與單／雙音步，將長條件或長定語拆作連續短句。\n\n"
+        "## 三、包內目錄速覽\n\n"
+        "- `prebuilt/風格DNA.md`：前三體核心指南（中古口語公牘、駢散兼行、四六禮辭）。\n"
+        "- `prebuilt/擴充語體.md`：五體路由表與增補二體指南（四六論事陳情、六朝駢論）。\n"
+        f"- `raw/`：五體實操精選範文共 {len(exemplars)} 篇。\n"
+        "- `allusions/`：《初學記》`INDEX.md` 與 34 個主題分片 CSV（3,564 組事對）。\n"
+    )
+    assert len(web_skill) <= 500_000
+
+    payload: dict[str, bytes] = {
+        "SKILL.md": web_skill.encode("utf-8"),
+        "prebuilt/風格DNA.md": core_guide.read_bytes(),
+        "prebuilt/擴充語體.md": ext_guide.read_bytes(),
+    }
+    for rel in exemplars:
+        p = ROOT / rel
+        assert p.is_file(), f"missing exemplar {rel}"
+        payload[rel] = p.read_bytes()
+    payload["allusions/INDEX.md"] = (ROOT / "allusions/INDEX.md").read_bytes()
+    for shard in sorted((ROOT / "allusions").glob("*.csv")):
+        payload[f"allusions/{shard.name}"] = shard.read_bytes()
+
+    # Validate Gemini Apps ZIP constraints and internal reference integrity.
+    assert len(payload) <= 100, f"web zip exceeds 100-file limit: {len(payload)}"
+    raw_bytes = sum(len(b) for b in payload.values())
+    assert raw_bytes <= 100 * 1024 * 1024, f"web zip uncompressed size too large: {raw_bytes}"
+    for arc in payload:
+        parts = Path(arc).parts
+        assert len(parts) - 1 <= 10, f"nesting too deep: {arc}"
+        assert arc.endswith((".md", ".csv")), f"unsupported extension in web zip: {arc}"
+        assert not any(part.startswith(".") or part == ".." for part in parts), f"bad path: {arc}"
+    ref_re = re.compile(r"`((?:raw|prebuilt|allusions)/[^`]+?\.(?:md|csv))`")
+    for doc_arc in ("SKILL.md", "prebuilt/風格DNA.md", "prebuilt/擴充語體.md"):
+        for ref in ref_re.findall(payload[doc_arc].decode("utf-8")):
+            assert ref in payload, f"missing reference {ref} in web zip (cited by {doc_arc})"
+
+    out_path = Path(out_zip)
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    with zipfile.ZipFile(out_path, "w", compression=zipfile.ZIP_DEFLATED, compresslevel=9) as zf:
+        for arc in sorted(payload):
+            zi = zipfile.ZipInfo(arc, date_time=(2026, 1, 1, 0, 0, 0))
+            zi.compress_type = zipfile.ZIP_DEFLATED
+            zf.writestr(zi, payload[arc])
+    zip_size = out_path.stat().st_size
+    assert zip_size <= 100 * 1024 * 1024, f"web zip compressed size too large: {zip_size}"
+    print(
+        f"PACKED {out_path}: {len(payload)} files ({len(exemplars)} exemplars, "
+        f"{sum(1 for k in payload if k.startswith('allusions/'))} allusion files), "
+        f"{zip_size / 1024:.1f} KB zip / {raw_bytes / 1024:.1f} KB raw."
+    )
+
+
 if __name__ == "__main__":
     args = sys.argv[1:]
     if not args:
@@ -276,8 +388,10 @@ if __name__ == "__main__":
         check_style(args[1])
     elif args[0] == "--allusion" and len(args) == 2:
         search_allusion(args[1])
+    elif args[0] == "--pack-web" and len(args) in (1, 2):
+        pack_web(args[1] if len(args) == 2 else "dist/tshiaengliu-web.zip")
     else:
         sys.exit(
             "Usage: check_skill.py [--target prebuilt|distilled] | "
-            "[--stats [--target DIR]] | [--allusion KEYWORD] | [--style <file|->]"
+            "[--stats [--target DIR]] | [--allusion KEYWORD] | [--style <file|->] | [--pack-web [OUT_ZIP]]"
         )

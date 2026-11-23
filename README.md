@@ -13,6 +13,8 @@
 
 ### 1. 安裝即用
 
+- **Coding Agent（三體核心）**：
+
 ```bash
 npx skills add jiwei-y/tshiaengliu
 ```
@@ -23,16 +25,19 @@ npx skills add jiwei-y/tshiaengliu
 請啟用 tshiaengliu 技能與我對話。
 ```
 
-### 2. 自檢與重新蒸餾（可選）
+- **Gemini Web App（五體全本，含四六論事與六朝駢論）**：直接自本倉庫 [GitHub Releases](https://github.com/jiwei-y/tshiaengliu/releases/latest) 下載最新的 `tshiaengliu-web-*.zip` 上傳為技能，或本機執行下方 `--pack-web` 一鍵打包（僅收實操精選範文與典故分片，符合網頁端檔案數上限）。
 
-執行內置自檢腳本，驗證倉庫路徑、語料索引、典故表與黃金範例的句律節奏（亦可傳入 `--style` 檢驗任意輸出樣本的短句與分號指標）：
+### 2. 自檢、打包與重新蒸餾（可選）
+
+執行內置自檢腳本，驗證倉庫路徑、語料索引、典故表與黃金範例的句律節奏（亦可一鍵產出 Gemini Web App 技能包，或以 `--style` 檢驗任意輸出樣本的短句與分號指標）：
 
 ```bash
-python3 scripts/check_skill.py                    # 驗證 prebuilt/ 完整性、原例逐字比對與範例句律
-python3 scripts/check_skill.py --stats            # 輸出 raw/ 客觀句律、高頻詞、邊界篇與範文候選
-python3 scripts/check_skill.py --target distilled # 驗證重蒸餾產物 distilled/
-python3 scripts/check_skill.py --allusion 規矩     # 檢索《初學記》事對與完整出處（供四六駢文）
-python3 scripts/check_skill.py --style sample.txt # 檢測任意輸出樣本的短句、長句比與分號節奏
+python3 scripts/check_skill.py                                 # 驗證 prebuilt/ 完整性、原例逐字比對與範例句律
+python3 scripts/check_skill.py --pack-web dist/tshiaengliu-web.zip # 一鍵打包五體全本 Gemini Web App 技能 zip
+python3 scripts/check_skill.py --stats                         # 輸出 raw/ 客觀句律、高頻詞、邊界篇與範文候選
+python3 scripts/check_skill.py --target distilled              # 驗證重蒸餾產物 distilled/
+python3 scripts/check_skill.py --allusion 規矩                  # 檢索《初學記》事對與完整出處（供四六駢文）
+python3 scripts/check_skill.py --style sample.txt              # 檢測任意輸出樣本的短句、長句比與分號節奏
 ```
 
 若調整了 `raw/` 語料，可依 [`SKILL.md`](SKILL.md) 第四節重新蒸餾並輸出至 `distilled/`（存在時自動優先於 `prebuilt/`）：
@@ -41,7 +46,7 @@ python3 scripts/check_skill.py --style sample.txt # 檢測任意輸出樣本的�
 請閱讀 SKILL.md，對 raw/ 語料重新蒸餾並輸出至 distilled/。
 ```
 
-## 內置語料與三層語體
+## 內置語料與分層語體
 
 `raw/` 收錄五組共 270 篇純文本 Markdown 文獻：
 
@@ -49,9 +54,9 @@ python3 scripts/check_skill.py --style sample.txt # 檢測任意輸出樣本的�
 | - | - | - | - |
 | `raw/李德裕/` | 136 | 99 篇中古口語公牘密狀（另有駢散奏議與四六表狀） | **日常預設**：問答、匯報、排障、分派 |
 | `raw/陸贄/` | 56 | 中唐政論奏議，駢散兼行、善設問推論 | 深度分析、架構論證、利弊權衡 |
-| `raw/崔致遠/` | 36 | 晚唐四六奏狀，駢儷工穩 | 正式致辭、規範總結、四六駢文 |
-| `raw/李商隱/` | 28 | 晚唐四六表狀，對仗精工、用典極密 | 正式賀慶、典雅致辭、四六駢文 |
-| `raw/文選/` | 14 | 六朝表、論，駢文典範 | 隆重論述、典雅四六文 |
+| `raw/崔致遠/` | 36 | 晚唐四六表狀，兼有賀慶禮辭與時務論事 | 四六禮辭；五體本增補四六論事陳情 |
+| `raw/李商隱/` | 28 | 晚唐四六表狀，對仗精工、用典極密 | 四六禮辭；五體本增補四六諫論陳情 |
+| `raw/文選/` | 14 | 六朝表、論，辭采典雅、宏議鋪張 | 四六禮辭；五體本增補六朝駢論 |
 
 ## 內置典故庫（`allusions/`）
 
@@ -61,15 +66,18 @@ python3 scripts/check_skill.py --style sample.txt # 檢測任意輸出樣本的�
 
 ```text
 tshiaengliu/
-├── SKILL.md                          # 技能薄入口（按需載入與回錨規則）
+├── SKILL.md                          # Coding Agent 三體薄入口（按需載入與回錨規則）
 ├── README.md                         # 本說明文檔
 ├── LICENSE
 ├── NOTICE
 ├── CONTRIBUTING.md
+├── .github/workflows/
+│   └── release-web-skill.yml         # 合併至 main 後自動發布五體 Web App zip 至 Release
 ├── agents/
 │   └── openai.yaml                   # Agent 介面設定
 ├── prebuilt/
-│   ├── 風格DNA.md                    # 內置單一風格總指南（含三體句法核與現代工程範例）
+│   ├── 風格DNA.md                    # 三體核心總指南（含句法核與現代工程範例）
+│   ├── 擴充語體.md                    # 五體增補指南（四六論事陳情、六朝駢論）
 │   └── _meta/
 │       └── corpus_index.json         # 全庫 270 篇離線分類索引（供重蒸餾使用）
 ├── raw/                              # 270 篇唐與六朝純文本語料
@@ -82,7 +90,7 @@ tshiaengliu/
 │   ├── INDEX.md                      # 《初學記》34 門主題分片目錄
 │   └── 01_天象日月.csv … 34_鳥部鱗介.csv
 ├── scripts/
-│   └── check_skill.py                # 倉庫完整性、典故檢索與句律節奏自檢腳本
+│   └── check_skill.py                # 倉庫自檢、語料統計、典故檢索、句律檢測與 Web zip 打包
 └── docs/
     ├── release-checklist.md
     └── usage-boundaries.md
