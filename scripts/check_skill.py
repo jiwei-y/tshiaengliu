@@ -277,64 +277,79 @@ def pack_web(out_zip: str) -> None:
     ext_guide = ROOT / "prebuilt/擴充語體.md"
     ext_text = ext_guide.read_text(encoding="utf-8")
 
-    # Parse exemplar lists directly from single-source docs (3 core in SKILL.md + 2 extension in 擴充語體.md).
+    # Parse exemplar lists from single-source docs: core 1 & 3 (skip Lu Zhi #2) + extension 2 registers.
     sec1 = skill_text.split("## 一、", 1)[1].split("## 二、", 1)[0]
     core_blocks = re.split(r"(?m)^\d+\.\s+", sec1)[1:4]
     assert len(core_blocks) == 3, "could not parse 3 core register blocks from SKILL.md"
     ext_blocks = [ext_text.split("## 二、", 1)[1].split("## 三、", 1)[0], ext_text.split("## 三、", 1)[1]]
 
     raw_re = re.compile(r"`(raw/[^`]+\.md)`")
-    groups = [raw_re.findall(b) for b in (*core_blocks, *ext_blocks)]
-    assert all(groups), f"missing exemplars in one of the 5 registers: {[len(g) for g in groups]}"
+    groups = [raw_re.findall(b) for b in (core_blocks[0], core_blocks[2], *ext_blocks)]
+    assert all(groups), f"missing exemplars in one of the 4 web registers: {[len(g) for g in groups]}"
     exemplars = list(dict.fromkeys(p for g in groups for p in g))
+
+    # Strip Lu Zhi (駢散兼行) from the zipped copy of prebuilt/風格DNA.md so Web App routes cleanly across 4 registers.
+    web_core = core_guide.read_text(encoding="utf-8")
+    web_core = web_core.replace("## 一、三體路由與優先序", "## 一、核心語體與優先序", 1)
+    web_core = re.sub(r"(?m)^\|[^\n]*駢散兼行[^\n]*\n", "", web_core)
+    web_core = web_core.replace(
+        "**中古口語公牘**與**駢散兼行**屬實務與論辨體",
+        "**中古口語公牘**屬日常實務體",
+        1,
+    )
+    web_core = web_core.replace(
+        "**四六駢文**屬禮儀文辭體",
+        "**四六駢文**（含禮辭與論事）及**六朝駢論**屬典雅文辭體",
+        1,
+    )
+    web_core = re.sub(r"\n---\n\n## 三、駢散兼行.*?(?=\n---\n\n## 四、四六駢文)", "", web_core, flags=re.S)
+    web_core = web_core.replace("## 四、四六駢文", "## 三、四六駢文", 1)
+    assert "陸贄" not in web_core and "駢散兼行" not in web_core, "failed to strip Lu Zhi from web core guide"
 
     fmt_list = lambda paths: "\n".join(f"     - `{p}`" for p in paths)
     name = "tshiaengliu"
     desc = (
-        "賦予對話與寫作唐代及六朝五層語體（預設李德裕中古口語公牘，深度論辨用陸贄駢散兼行，"
-        "禮辭賀謝用四六駢文，正裝論事陳情用崔致遠與李商隱四六，哲理世情長論用六朝駢論，"
-        "並附《初學記》典故庫）。除非用戶另有指定，對話與產物語言一致。"
+        "賦予對話與寫作唐代及六朝四層語體（預設李德裕中古口語公牘，禮辭賀謝用四六駢文，"
+        "分析論事與陳情用崔致遠與李商隱四六，哲理世情長論用六朝駢論，並附《初學記》典故庫）。"
+        "除非用戶另有指定，對話與產物語言一致。"
     )
     assert len(name) <= 64 and len(desc) <= 1024
     web_skill = (
         f"---\nname: {name}\ndescription: {desc}\n---\n\n"
-        "# 清流話風（tshiaengliu 五體全本）\n\n"
+        "# 清流話風（tshiaengliu 網頁端四體本）\n\n"
         "## 一、啟用與按需載入\n\n"
         "啟用後，對話與所生成的報告、文章、說明預設皆採本風格（除非用戶另有指定）。按當前場合載入對應指南與實操範文：\n\n"
         f"1. **日常啟用（預設：中古口語公牘，李德裕密狀 {len(groups[0])} 篇）**：\n"
-        "   - 讀取 `prebuilt/風格DNA.md` 與 `prebuilt/擴充語體.md`（掌握五體路由與各檔分際）。\n"
+        "   - 讀取 `prebuilt/風格DNA.md` 與 `prebuilt/擴充語體.md`（掌握四體路由與各檔分際）。\n"
         "   - 讀取以下李德裕密狀校準短句節奏、文白比例與條疏體例：\n"
         f"{fmt_list(groups[0])}\n"
-        f"2. **切換為駢散兼行（邏輯論辨、架構與方案利弊權衡，陸贄 {len(groups[1])} 篇）**：\n"
-        "   - 補讀以下陸贄原文：\n"
-        f"{fmt_list(groups[1])}\n"
-        f"3. **切換為四六駢文·禮辭（賀慶致謝、辭讓致辭、隆重總結，{len(groups[2])} 篇）**：\n"
+        f"2. **切換為四六駢文·禮辭（賀慶致謝、辭讓致辭、隆重總結，{len(groups[1])} 篇）**：\n"
         "   - 補讀以下四六禮辭原文：\n"
-        f"{fmt_list(groups[2])}\n"
+        f"{fmt_list(groups[1])}\n"
         "   - 查核典故：先讀 `allusions/INDEX.md`，再按主題讀對應分片 CSV 核對出處原文，以純粹典雅漢語化入四六句格。\n"
-        f"4. **切換為四六駢文·論事陳情（以正裝四六陳述實務形勢、利害得失、婉諫或陳情，{len(groups[3])} 篇）**：\n"
+        f"3. **切換為四六駢文·論事陳情（分析論證、形勢利害權衡、婉諫或陳情，{len(groups[2])} 篇）**：\n"
         "   - 依 `prebuilt/擴充語體.md` 第二節補讀以下原文：\n"
-        f"{fmt_list(groups[3])}\n"
+        f"{fmt_list(groups[2])}\n"
         "   - 查核典故：同依 `allusions/INDEX.md` 按主題取分片 CSV 核對原文，以純粹典雅漢語成文。\n"
-        f"5. **切換為六朝駢論（哲理思辨、世情批評、制度文化宏觀長論，{len(groups[4])} 篇）**：\n"
+        f"4. **切換為六朝駢論（哲理思辨、世情批評、制度文化宏觀長論，{len(groups[3])} 篇）**：\n"
         "   - 依 `prebuilt/擴充語體.md` 第三節補讀以下原文：\n"
-        f"{fmt_list(groups[4])}\n"
+        f"{fmt_list(groups[3])}\n"
         "   - 全無公文表套，善用設客問答、分類條舉與高密虛詞排比；用典可依 `allusions/INDEX.md` 查核原文。\n\n"
         "## 二、底線與長對話節奏\n\n"
-        "- 實務與論辨回覆（中古口語公牘、駢散兼行）中，程式碼、命令、檔案路徑、錯誤碼與數據原樣保留。\n"
+        "- 日常實務回覆（中古口語公牘）中，程式碼、命令、檔案路徑、錯誤碼與數據原樣保留。\n"
         "- 禮辭、四六論事與六朝駢論以純粹典雅漢語成文，以實事化入句格。\n"
         "- 長對話撰寫較長（約 150 字以上）日常公牘前，留意短句節奏與單／雙音步，將長條件或長定語拆作連續短句。\n\n"
         "## 三、包內目錄速覽\n\n"
-        "- `prebuilt/風格DNA.md`：前三體核心指南（中古口語公牘、駢散兼行、四六禮辭）。\n"
-        "- `prebuilt/擴充語體.md`：五體路由表與增補二體指南（四六論事陳情、六朝駢論）。\n"
-        f"- `raw/`：五體實操精選範文共 {len(exemplars)} 篇。\n"
+        "- `prebuilt/風格DNA.md`：日常口語公牘與四六禮辭指南。\n"
+        "- `prebuilt/擴充語體.md`：四體路由表與增補二體指南（四六論事陳情、六朝駢論）。\n"
+        f"- `raw/`：四體實操精選範文共 {len(exemplars)} 篇。\n"
         "- `allusions/`：《初學記》`INDEX.md` 與 34 個主題分片 CSV（3,564 組事對）。\n"
     )
     assert len(web_skill) <= 500_000
 
     payload: dict[str, bytes] = {
         "SKILL.md": web_skill.encode("utf-8"),
-        "prebuilt/風格DNA.md": core_guide.read_bytes(),
+        "prebuilt/風格DNA.md": web_core.encode("utf-8"),
         "prebuilt/擴充語體.md": ext_guide.read_bytes(),
     }
     for rel in exemplars:
@@ -347,6 +362,7 @@ def pack_web(out_zip: str) -> None:
 
     # Validate Gemini Apps ZIP constraints and internal reference integrity.
     assert len(payload) <= 100, f"web zip exceeds 100-file limit: {len(payload)}"
+    assert not any("陸贄" in k for k in payload), "Lu Zhi exemplar leaked into web zip"
     raw_bytes = sum(len(b) for b in payload.values())
     assert raw_bytes <= 100 * 1024 * 1024, f"web zip uncompressed size too large: {raw_bytes}"
     for arc in payload:
