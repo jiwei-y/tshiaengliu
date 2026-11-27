@@ -40,7 +40,7 @@ python3 scripts/check_skill.py --allusion 規矩                  # 檢索《初
 python3 scripts/check_skill.py --style sample.txt              # 檢測任意輸出樣本的短句、長句比與分號節奏
 ```
 
-若調整了 `raw/` 語料，可依 [`SKILL.md`](SKILL.md) 第四節重新蒸餾並輸出至 `distilled/`（存在時自動優先於 `prebuilt/`）：
+若調整了 `raw/` 語料，可依 [`SKILL.md`](SKILL.md) 第五節重新蒸餾並輸出至 `distilled/`（存在時自動優先於 `prebuilt/`）：
 
 ```text
 請閱讀 SKILL.md，對 raw/ 語料重新蒸餾並輸出至 distilled/。
@@ -66,7 +66,7 @@ python3 scripts/check_skill.py --style sample.txt              # 檢測任意輸
 
 ```text
 tshiaengliu/
-├── SKILL.md                          # Coding Agent 三體薄入口（按需載入與回錨規則）
+├── SKILL.md                          # Coding Agent 三體薄入口（按需載入、回錨與分遣授使）
 ├── README.md                         # 本說明文檔
 ├── LICENSE
 ├── NOTICE
