@@ -47,6 +47,13 @@ jobs:
 
           python3 scripts/check_skill.py --pack-web "${ASSET}"
 
+          NEW_DIGEST="sha256:$(sha256sum "${ASSET}" | awk '{print $1}')"
+          PREV_DIGEST="$(gh release view --json assets --jq '.assets[] | select(.name | endswith(".zip")) | .digest' 2>/dev/null | head -n 1 || true)"
+          if [ "${GITHUB_EVENT_NAME}" = "push" ] && [ -n "${PREV_DIGEST}" ] && [ "${NEW_DIGEST}" = "${PREV_DIGEST}" ]; then
+            echo "Web skill zip unchanged (${NEW_DIGEST}); skipping duplicate release."
+            exit 0
+          fi
+
           gh release create "${TAG}" "${ASSET}" \
             --target "${GITHUB_SHA}" \
             --title "tshiaengliu Web Skill ${TAG}" \
